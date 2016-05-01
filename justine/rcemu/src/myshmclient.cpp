@@ -345,16 +345,16 @@ void justine::sampleclient::MyShmClient::start10 ( boost::asio::io_service& io_s
   std::vector<Gangster> gngstrs;
 
   for ( ;; )
- 	{
+  {
       std::this_thread::sleep_for ( std::chrono::milliseconds ( 200 ) );
       idozito +=200;
       if(idozito==idokorlat)
-      	{kapcsolo=!kapcsolo; idozito=0;}
+        {kapcsolo=!kapcsolo; idozito=0;}
 
       //for ( auto cop:cops )
       for (std::vector<Cop>::iterator it = cops.begin() ; it != cops.end(); it++)
         {
-			int i=std::distance(cops.begin(), it); // i a jelenlegi vektor indexe
+      int i=std::distance(cops.begin(), it); // i a jelenlegi vektor indexe
 
           car ( socket, cops[i], &f, &t, &s );
           
@@ -367,34 +367,40 @@ void justine::sampleclient::MyShmClient::start10 ( boost::asio::io_service& io_s
           if(!kapcsolo)
           {
           if(i%3==0){
-          		gngstrs = gangsters ( socket, cops[i], t );
-          		if ( gngstrs.size() > 0 )
-            		{
-            			g = gngstrs[0].to;
-          	 			elozocel=g;
- 	         		  }
-    	      	else
-        	    	{
-            			g = 0;
-          				elozocel=g;
-          			}
-          		}
-          	else g=elozocel;
+              gngstrs = gangsters ( socket, cops[i], t );
+              if ( gngstrs.size() > 0 )
+                {
+                  g = gngstrs[0].to; //legkozelebbi gengszter celpontja
+                  elozocel=g;
+                }
+              else
+                {
+                  g = 0;
+                  elozocel=g;
+                }
+              }
+            else g=elozocel;
           }
 
           else 
           {
-  			if ( gngstrs.size() > 0 )
-          g = gngstrs[0].to;
-        
-          else
-            g = 0;
+        if ( gngstrs.size() > 0 )
+        {
+          if (i%3==0)
+            g = gngstrs[0].to;  
+          if (i%3==1)
+            g = gngstrs[gngstrs.size()/2].to;
+          if (i%3==2)
+            g = gngstrs[gngstrs.size()-1].to;
+        }       
+            else
+              g = 0;
           }
          
-          	// if ( i >= 3)
-          	// g = 0;
+            // if ( i >= 3)
+            // g = 0;
 
-          	// initcops - rendorok szama
+            // initcops - rendorok szama
 
           if ( g > 0 )
             {
