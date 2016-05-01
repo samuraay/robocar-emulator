@@ -84,23 +84,15 @@ class SmartCity
 {
 public:
 
-  SmartCity ( const char * osm_file, const char * shm_segment, const char * map_file, int mode ) : SmartCity ( osm_file, shm_segment )
+  SmartCity ( const char * osm_file, const char * shm_segment, const char * map_file ) : SmartCity ( osm_file, shm_segment )
   {
 
     std::fstream gpsFile ( map_file, std::ios_base::out );
 
     for ( auto loc: m_waynode_locations )
-      {
-        gpsFile << loc.first
-                << " " << loc.second.lat()
-                << " " << loc.second.lon();
-
-        if ( mode )
-          gpsFile <<
-                  " " << node2way ( loc.first );
-
-        gpsFile << std::endl;
-      }
+      gpsFile << loc.first
+              << " " << loc.second.lat()
+              << " " << loc.second.lon() << std::endl;
 
     gpsFile.close ();
 
@@ -122,9 +114,7 @@ public:
         OSMReader osm_reader ( osm_file, alist, palist,
                                m_waynode_locations,
                                m_busWayNodesMap,
-                               m_way2nodes,
-                               m_way2name
-                             );
+                               m_way2nodes );
         estimated_size = 20*3*osm_reader.get_estimated_memory();
 
 #ifdef DEBUG
@@ -200,7 +190,7 @@ public:
     catch ( boost::interprocess::bad_alloc e )
       {
 
-        std::cerr << " Out of shared memory..." << std::cerr;
+        std::cerr << " Out of shared memory..." << std::endl;
         std::cout << e.what() <<std::endl;
 
         std::cerr
@@ -243,24 +233,6 @@ public:
     m_thread.join();
     delete segment;
     delete m_remover;
-  }
-
-  std::string node2way ( osmium::unsigned_object_id_type node )
-  {
-
-    for ( auto wayit = begin ( m_way2nodes );
-          wayit != end ( m_way2nodes ); ++wayit )
-      {
-
-        WayNodesVect::iterator it = std::find ( wayit->second.begin(), wayit->second.end(), node );
-
-        if ( it != wayit->second.end() )
-          return m_way2name[wayit->first];
-
-      }
-
-    return "Unknown";
-
   }
 
   void processes ( )
@@ -344,8 +316,6 @@ private:
   WaynodeLocations m_waynode_locations;
   WayNodesMap m_busWayNodesMap;
   Way2Nodes m_way2nodes;
-
-  WayNames m_way2name;
 
   struct shm_remove
   {

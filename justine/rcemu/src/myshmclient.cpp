@@ -88,7 +88,7 @@ std::vector<justine::sampleclient::MyShmClient::Cop> justine::sampleclient::MySh
 
   boost::system::error_code err;
 
-  size_t length = std::sprintf ( data, "<init guided %s 10 c>", m_teamname.c_str() );
+  size_t length = std::sprintf ( data, "<init guided %s 3 c>", m_teamname.c_str() );
 
   socket.send ( boost::asio::buffer ( data, length ) );
 
@@ -332,27 +332,69 @@ void justine::sampleclient::MyShmClient::start10 ( boost::asio::io_service& io_s
 
   std::vector<Cop> cops = initcops ( socket );
 
-  unsigned int g {0u};
+  unsigned int g {0u}; // hova megy a rendor
   unsigned int f {0u};
   unsigned int t {0u};
   unsigned int s {0u};
+  
+  unsigned int elozocel;
+  const int idokorlat=20000;
+  int idozito=0;
+  bool kapcsolo=false;
 
   std::vector<Gangster> gngstrs;
 
   for ( ;; )
-    {
+ 	{
       std::this_thread::sleep_for ( std::chrono::milliseconds ( 200 ) );
+      idozito +=200;
+      if(idozito==idokorlat)
+      	{kapcsolo=!kapcsolo; idozito=0;}
 
-      for ( auto cop:cops )
+      //for ( auto cop:cops )
+      for (std::vector<Cop>::iterator it = cops.begin() ; it != cops.end(); it++)
         {
-          car ( socket, cop, &f, &t, &s );
+			int i=std::distance(cops.begin(), it); // i a jelenlegi vektor indexe
 
-          gngstrs = gangsters ( socket, cop, t );
+          car ( socket, cops[i], &f, &t, &s );
+          
 
-          if ( gngstrs.size() > 0 )
-            g = gngstrs[0].to;
+          // if ( gngstrs.size() > 0 )
+          // g = gngstrs[0].to;
+        
+          // else
+          //   g = 0;
+          if(!kapcsolo)
+          {
+          if(i%3==0){
+          		gngstrs = gangsters ( socket, cops[i], t );
+          		if ( gngstrs.size() > 0 )
+            		{
+            			g = gngstrs[0].to;
+          	 			elozocel=g;
+ 	         		  }
+    	      	else
+        	    	{
+            			g = 0;
+          				elozocel=g;
+          			}
+          		}
+          	else g=elozocel;
+          }
+
+          else 
+          {
+  			if ( gngstrs.size() > 0 )
+          g = gngstrs[0].to;
+        
           else
             g = 0;
+          }
+         
+          	// if ( i >= 3)
+          	// g = 0;
+
+          	// initcops - rendorok szama
 
           if ( g > 0 )
             {
@@ -365,7 +407,7 @@ void justine::sampleclient::MyShmClient::start10 ( boost::asio::io_service& io_s
                   std::copy ( path.begin(), path.end(),
                               std::ostream_iterator<osmium::unsigned_object_id_type> ( std::cout, " -> " ) );
 
-                  route ( socket, cop, path );
+                  route ( socket, cops[i], path );
                 }
             }
         }

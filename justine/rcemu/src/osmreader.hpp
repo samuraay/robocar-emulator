@@ -43,6 +43,7 @@
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/geom/haversine.hpp>
 #include <osmium/geom/coordinates.hpp>
+#include <google/protobuf/descriptor.h>
 #include <iostream>
 #include <map>
 #include <set>
@@ -69,8 +70,6 @@ typedef std::map<osmium::unsigned_object_id_type, WayNodesVect> Way2Nodes;
 typedef std::map<osmium::unsigned_object_id_type, WayNodesVect> AdjacencyList;
 typedef osmium::index::map::SparseMemMap<osmium::unsigned_object_id_type, int > Vertices;
 
-typedef std::map<osmium::unsigned_object_id_type, std::string> WayNames;
-
 class OSMReader : public osmium::handler::Handler
 {
 public:
@@ -79,14 +78,11 @@ public:
               AdjacencyList & palist,
               WaynodeLocations & waynode_locations,
               WayNodesMap & busWayNodesMap,
-              Way2Nodes & way2nodes,
-              WayNames & way2name
-            ) : alist ( alist ),
+              Way2Nodes & way2nodes ) : alist ( alist ),
     palist ( palist ),
     waynode_locations ( waynode_locations ),
     busWayNodesMap ( busWayNodesMap ),
-    way2nodes ( way2nodes ),
-    way2name ( way2name )
+    way2nodes ( way2nodes )
   {
 
     try
@@ -134,14 +130,12 @@ public:
         std::set<osmium::unsigned_object_id_type> sum_vertices;
         std::map<osmium::unsigned_object_id_type, size_t>  word_map;
         int sum_edges {0};
-        std::map <int, int> node_degrees;
         for ( auto busit = begin ( alist );
               busit != end ( alist ); ++busit )
           {
 
             sum_vertices.insert ( busit->first );
             sum_edges+=busit->second.size();
-            node_degrees[busit->second.size()]++;
 
             for ( const auto &v : busit->second )
               {
@@ -149,16 +143,10 @@ public:
               }
 
           }
-        std::cout << " #citymap edges = "<< sum_edges << std::endl;
+        std::cout << " #citymap edges = "<< sum_edges<< std::endl;
         std::cout << " #citymap vertices = "<< sum_vertices.size() << std::endl;
         std::cout << " #citymap vertices (deg- >= 1) = "<< alist.size() << std::endl;
-        std::cout << " #onewayc = "<< onewayc << std::endl;
-        std::cout << " #distribution of out degrees:" << std::endl;
-        std::cout << " #";
-        for ( const auto &i : node_degrees )
-          std::cout << "deg-=" << i.first << ":" << i.second << ", ";
-        std::cout << std::endl;
-        std::cout << " #mean of out degrees:" << ( double ) sum_edges / ( double ) alist.size() << std::endl;
+        std::cout << " #onewayc = "<< onewayc<< std::endl;
 
 #endif
 
@@ -223,12 +211,6 @@ public:
       }
 
     ++nOSM_ways;
-
-    const char* wayname = way.tags() ["name"];
-    if ( wayname )
-      way2name[way.id()] = wayname;
-    else
-      way2name[way.id()] = "UNS "+std::to_string ( way.id() );
 
     double way_length = osmium::geom::haversine::distance ( way.nodes() );
     sum_highhway_length += way_length;
@@ -404,7 +386,6 @@ private:
   WaynodeLocations & waynode_locations;
   WayNodesMap & busWayNodesMap;
   Way2Nodes & way2nodes;
-  WayNames & way2name;
 
 };
 
